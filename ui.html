@@ -1,0 +1,27 @@
+<h2>Add user scenario</h2>
+<p>User scenario: <input type="file" id="txtfile" accept=".txt"></p>
+<button id="add">Add</button>
+<button id="cancel">Cancel</button>
+<script>
+  let scenario = null;
+  document.getElementById('txtfile')
+    .addEventListener('change', function () {
+      let fr = new FileReader();
+      fr.onload = function () {
+          scenario = fr.result;
+      }
+
+      fr.readAsText(this.files[0]);
+    })
+
+  document.getElementById('add').onclick = () => {
+    if (scenario !== null) {
+      parent.postMessage({ pluginMessage: { type: 'user-scenario', scenario } }, '*')
+    } 
+  }
+
+  document.getElementById('cancel').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+  }
+
+</script>
