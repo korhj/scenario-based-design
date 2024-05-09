@@ -29,7 +29,11 @@ async function streamAIResponse(body: z.infer<typeof CompletionRequestBody>) {
 
 export default function Plugin() {
   const [completion, setCompletion] = useState<
-    { "Dimensions-Name": string; "Dimensions-Option": string; "Reason": string; }[]
+  { Page: string;
+    EleName: string[];
+    EleForm: string[];
+    EleCon: string[];
+    Reason: string[];}[]
     >([]);
 
   // This function calls our API and handles the streaming response.
@@ -62,28 +66,31 @@ export default function Plugin() {
     console.log("text", text);
     const dataJSON = JSON.parse(text);
     console.log("text parsed", dataJSON);
-    const dataArray = [];
     
-    for (const key in dataJSON) {
-      if (dataJSON.hasOwnProperty(key)) {
-        const value = dataJSON[key];
-        dataArray.push(value);
-      }
-    }
-
-    setCompletion(dataArray);
+    const transformedData = dataJSON.Page.map((page: any, index: string | number) => ({
+      Page: page,
+      EleName: dataJSON.EleName[index],
+      EleForm: dataJSON.EleForm[index],
+      EleCon: dataJSON.EleCon[index],
+      Reason: dataJSON.Reason[index]
+    }));
+    console.log("transformed", transformedData)
+    setCompletion(transformedData);
     console.log(completion)
   };
 
-  const onAddToCanvas = async (elementText: string) => {
-    
+  const onAddToCanvas = async (elementText: string, pageName: string) => {
     let nodeID: string | null = null;
     const textPosition = await getTextOffset();
 
+
     nodeID = await figmaAPI.run(
-      async (figma, { nodeID, elementText, textPosition }) => {
+      async (figma, { nodeID, elementText, textPosition, pageName }) => {
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         
+        const parentNode = figma.currentPage.findOne(n => n.type === 'FRAME' && n.name === pageName);
+        const parentFrame = parentNode && parentNode.type === 'FRAME' ? parentNode as FrameNode : null;
+
         // Create a frame to contain the text node with auto layout
         const frame = figma.createFrame();
         frame.x = textPosition?.x ?? 0;
@@ -107,9 +114,34 @@ export default function Plugin() {
         frame.appendChild(textNode);
         frame.resize(100,100)
 
+        if (parentFrame) {
+          parentFrame.appendChild(frame);
+        }
+
         return frame.id; 
       },
-      { nodeID, elementText, textPosition },
+      { nodeID, elementText, textPosition, pageName },
+    );
+  };
+
+  const onAddPageToCanvas = async (elementText: string) => {
+    
+    let nodeID: string | null = null;
+    const textPosition = await getTextOffset();
+
+    nodeID = await figmaAPI.run(
+      async (figma, { nodeID, elementText }) => {
+        await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        
+        // Create a frame to contain the text node with auto layout
+        const frame = figma.createFrame();
+        frame.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.8, b: 0.8 } }];
+        frame.resize(500,500);
+        frame.name = elementText;
+
+        return frame.id; 
+      },
+      { nodeID, elementText },
     );
   };
 
@@ -123,21 +155,33 @@ export default function Plugin() {
       <div className="flex flex-row gap-2">
         <button
           onClick={onStreamToIFrame}
-          className="mb-5 p-2 px-4 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+          className="mb-7 p-3 px-5 rounded bg-indigo-700 text-white hover:bg-indigo-800"
         >
           Extract UI elements
         </button>
       </div>
         {completion.map((item, index) => (
-          <button
+          <><button
             key={index}
-            onClick={() => onAddToCanvas(item["Dimensions-Name"])}
+            onClick={() => onAddPageToCanvas(item.Page)}
             className="mb-5 p-2 px-4 rounded bg-indigo-600 text-white hover:bg-indigo-700"
           >
-            Dimensions-Name: {item["Dimensions-Name"]}<br></br>
-            Dimensions-Option: {item["Dimensions-Option"]}<br></br>
-            Reason: {item["Reason"]}
-          </button>
+            Page: {item.Page}<br></br>
+
+          </button><div className="mt-2">
+              {item.EleName.map((eleName, eleIndex) => (
+                <button
+                  key={eleIndex}
+                  onClick={() => onAddToCanvas(eleName, item.Page)}
+                  className="mr-2 mb-2 p-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  UI element: {eleName}<br></br>
+                  Form: {item.EleForm[eleIndex]}<br></br>
+                  Content: {item.EleCon[eleIndex]}
+                </button>
+              ))}
+            </div></>
+
         ))}
     </div>
   );
