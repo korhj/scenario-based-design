@@ -2,7 +2,6 @@
 
 import { figmaAPI } from "@/lib/figmaAPI";
 import { getTextForSelection } from "@/lib/getTextForSelection";
-import { getTextOffset } from "@/lib/getTextOffset";
 import { CompletionRequestBody } from "@/lib/types";
 import { colorText } from "@/lib/colorText";
 import { useState } from "react";
@@ -44,6 +43,13 @@ async function streamAIResponse(body: z.infer<typeof CompletionRequestBody>) {
 
 export default function Plugin() {
   const [completion, setCompletion] = useState<Page[]>([]);
+
+  const [showReasons, setShowReasons] = useState(false);
+
+  const handleToggleReasons = () => {
+      setShowReasons(!showReasons);  // Toggle the current state
+  };
+
   // This function calls our API and handles the streaming response.
   // This ends up building the text up and using React state to update the UI.
   const onStreamToIFrame = async () => {
@@ -84,25 +90,20 @@ export default function Plugin() {
 
   const onAddToCanvas = async (elementText: string, pageName: string) => {
     let nodeID: string | null = null;
-    const textPosition = await getTextOffset();
-
 
     nodeID = await figmaAPI.run(
-      async (figma, { nodeID, elementText, textPosition, pageName }) => {
+      async (figma, {elementText, pageName }) => {
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         
-        const parentNode = figma.currentPage.findOne(n => n.type === 'FRAME' && n.name === pageName);
-        const parentFrame = parentNode && parentNode.type === 'FRAME' ? parentNode as FrameNode : null;
+        const targetFrame = figma.currentPage.findOne(n => n.type === 'FRAME' && n.name === pageName) as FrameNode;
 
-        // Create a frame to contain the text node with auto layout
         const frame = figma.createFrame();
-        frame.x = textPosition?.x ?? 0;
-        frame.y = textPosition?.y ?? 0;
+        frame.x = 0;
+        frame.y = 0;
         frame.layoutMode = "VERTICAL";
-        frame.primaryAxisAlignItems = "CENTER"; 
-        frame.counterAxisAlignItems = "MIN"; 
+        frame.primaryAxisAlignItems = "CENTER";
+        frame.counterAxisAlignItems = "MIN";
         frame.itemSpacing = 8; 
-        //frame.fills = [{ type: "SOLID", color: { r: 1, g: 0, b: 0 } }];
 
         // Create the text node inside the frame
         const textNode = figma.createText();
@@ -117,29 +118,27 @@ export default function Plugin() {
         frame.appendChild(textNode);
         frame.resize(100,100)
 
-        if (parentFrame) {
-          parentFrame.appendChild(frame);
+        if (targetFrame) {
+          targetFrame.appendChild(frame);
         }
 
         return frame.id; 
       },
-      { nodeID, elementText, textPosition, pageName },
+      { elementText, pageName },
     );
   };
 
   const onAddPageToCanvas = async (elementText: string) => {
     
     let nodeID: string | null = null;
-    const textPosition = await getTextOffset();
 
     nodeID = await figmaAPI.run(
       async (figma, { nodeID, elementText }) => {
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-        
-        // Create a frame to contain the text node with auto layout
+
         const frame = figma.createFrame();
         frame.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.8, b: 0.8 } }];
-        frame.resize(500,500);
+        frame.resize(896,504);
         frame.name = elementText;
 
         return frame.id; 
@@ -150,7 +149,7 @@ export default function Plugin() {
 
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white">
+    <div className="flex flex-col items-start min-h-screen bg-gray-900 text-white w-full pl-2">
       <h1 className="text-4xl font-bold mb-5 mt-2">Scenario tool</h1>
       <div className="text-sm mb-5 text-gray-300">
         Select nodes to extract UI elements from scenarios inside it.
@@ -162,6 +161,15 @@ export default function Plugin() {
         >
           Extract UI elements
         </button>
+        <label className="mb-5 flex items-center">
+          <input
+            type="checkbox"
+            checked={showReasons}
+            onChange={handleToggleReasons}
+            className="mr-2"
+          />
+          Show Reasoning
+        </label>
       </div>
         {completion.map((page, pageIndex) => (
           <div key={pageIndex}>
@@ -171,16 +179,18 @@ export default function Plugin() {
               className="mb-5 p-2 px-4 rounded  text-white hover:opacity-75"
             >
               Page name: {page.pageName}<br></br>
+              {showReasons && <span className="text-white"> Reason: {page.pageReason}</span>}
             </button>
 
             {page.elements.map((element, elementIndex) => (
-              <div key={elementIndex} >
+              <div key={elementIndex} className="w-full pl-10">
                 <button
                   onClick={() => onAddToCanvas(element.elementName, page.pageName)}
                   style={{ backgroundColor: element.elementColor }}
                   className="mb-5 p-2 px-4 rounded text-white hover:opacity-75"
                 >
-                  UI Element: {element.elementName} ({element.elementType})
+                  UI Element: {element.elementName} ({element.elementType})<br></br>
+                  {showReasons && <span className="text-white"> Reason: {element.elementReason}</span>}
                 </button>
                 
               </div>
