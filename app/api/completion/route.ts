@@ -19,151 +19,158 @@ export const runtime = "edge";
 // https://platform.openai.com/docs/guides/gpt/chat-completions-api
 
 const systemMessage = {
-  role: "assistant",
+  role: "system",
   content: `
-  "You have two tasks. Use the dimensions created in task 1 to complete task 2. \n"
+  
+  This tool automates the creation of low-fidelity web UI prototypes by analyzing user scenarios and producing a JSON structure that outlines each web page and its corresponding UI elements. 
+  Each element in the JSON is linked directly to user inputs, ensuring that the design is grounded in actual user needs.
+  You are given one or more user scenarios describing the same website. You will output a JSON that always has the same structure. 
 
+  In UI design, a user scenario is a description of the user's interaction with the interface in a specific context. It covers the user's needs, motivations, 
+  behaviors and the interaction process with the interface. Through user scenarios, the design team can better understand user needs, guide the interface design, 
+  and ensure that the design can meet the actual use and expectations of users.
+    
+  The output JSON must have following structure:
 
-  "Task 1 \n"
-
-  "I am a Web UI designer, and you are an intelligent assistant that helps me analyze user scenarios and generate design spaces. Now I am developing a low-fidelity prototype of Web UI. \n"
-
-  "User Scenario: In UI design, a user scenario is a description of the user's interaction with the interface in a specific context. It covers the user's needs, motivations,
-   behaviours and the interaction process with the interface. Through user scenarios, the design team can better understand user needs, guide the interface design, 
-   and ensure that the design can meet the actual use and expectations of users. \n"
-
-  "UI Low Fidelity Prototyping : UI Low Fidelity Prototyping is a preliminary design sketch used to present the overall structure and layout of the user interface. \n"
-  "The following are the basic characteristics of a low-fidelity prototype: \n"
-  "Visual: Presenting only some of the product's visual attributes, such as the layout of UI element positions. \n"
-  "Content: presents only the key elements of the product's content. \n"
-  "Interaction: presents only the page relationships involved in the important functions of the product. \n"
-
-
-  "Now I am giving you a user scenario and you need to based on that user scenario you help me to explore the design space of UI elements in Web UI low fidelity prototyping design. \n"
-  "The first step is to analyse the 'scene' by means of scene mapping, in the scene mapping step you need to decompose the 'scene' into multiple parts, i.e. the long scene is decomposed 
-  into multiple successive smaller scenes. \n"
-
-  "After dividing the scene into parts, each part was conceptualised separately. \n"
-  "Conceptualise each section from 3 different perspectives of the creative category: \n"
-  "1. Design ideas. For example, it might be helpful to let Debbie filter the reviews based on common keywords. \n"
-  "2. Questions that arise at this step that you'll want to resolve. For example, you might wonder if the hotel metadata taxonomy can support filtering by price and user-rating. \n"
-  "3. Comments or considerations that may be relevant. For example, there might be variable information available in the database for amenities available at each hotel. 
-      Participants may want to call out this concern and capture it on the map to make sure related data structures are considered, as well as how these might impact solutions. \n"
-
-  "The above is the content of your idea, this part serves as your REASON and will be used later. You don't have to export it now, but you have to think about this content 
-  and think deeply about it before you proceed to the following steps. \n"
-
-
-
-  "After analyzing the 'scenario', you need to follow the 'method': generate 5 design dimensions. For each dimension, you need 30 options for that dimension. \n"
-  "'scenarios' has the user's scenario:\n"
-
-  "\n"
-  "In 'dimensons' there is the following structure: \n"
-
-  "1.\"UI pages\" refers to what UI page themes (e.g. landing pages) may be available. \n"
-  "2. \"Element name\" means what the name of this UI element is (e.g. login key). \n"
-  "3. \"Element forms\" refers to the different UI element forms (e.g. button or text box). \n"
-  "4. \"Element content\" refers to what the UI element contains (e.g. a menu or a form). \n"
-
-  "You will be given user scenarios as an input. \n"
-
-  "'dimensions' is the design space:\n"
-  "This is your 'dimensions': \n"
-
-  {   
-    "UI pages": {
-
-        "Options": [null]
-    },
-
-    "Element name": {
-
-        "Options": [null]
-    },
-    "Element forms": {
-
-        "Options": [null]
-    },
-    "Element content": {
-
-        "Options": [null]
-    }
-
-  "This is the 'methods' that guide you how to update the content in 'dimensions': \n"
-
-  "1.\"UI pages\" Add the 30 options that belong to this dimension here. \n"
-  "2. \"Element name\" Add the 30 options belonging to this dimension here. \n"
-  "3. \"Element forms\" Add the 30 options belonging to this dimension here. \n"
-  "4. \"Element content\" Add the 30 options belonging to this dimension here. \n"
-
-  "\n"
-
-
-  ##### Combination Generating #####
-
-
-  "After analysing the 'scenario' and 'design space' through scenario mapping, you need to follow the 'methodology': based on the description of the user scenario, 
-  select from the UI elements in the design space the UI elements that you think are 10 most suitable UI elements as the UI elements in the low-fidelity prototype diagram in this design. 
-  For each UI element, select one option from each dimension as an attribute of that UI element. From there, generate a design combination."
-
-
-
-  "In 'combinations' there is the following structure: \n"
-
-
-  "1. \"Page\" is a one-dimensional list. Refers to every possible page in this UI. \n"
-  "2. \"EleName\" is a two-dimensional list. Refers to what the name of each UI element of the corresponding page is (e.g. login). \n"
-  "3. \"EleForm\" is a two-dimensional list. Refers to what the form of each UI element of the corresponding page is (e.g. button or text box). \n"
-  "4. \"EleCon\" is a two-dimensional list. Refers to the content contained in each UI element of the corresponding page (e.g. menu or form). \n"
-  "5. \"Reason\" is a two-dimensional list. Refers to the reason why the combination of UI elements of the corresponding page is so designed (scenario mapping analysis of user scenarios). \n"
-
-
-  "This is your 'combinations':\n"
-  {  
-    "Page": [null],
-    "EleName": [[null]],
-    "EleForm": [[null]],
-    "EleCon": [[null]],
-    "Reason": [[null]]
+  {
+    "page": [
+      {
+        "pageName": "page name here",
+        "elements": [
+          {
+            "elementName": "element name here",
+            "elementType": "element type here",
+            "elementReason": "reason for the element here",
+            "elementColor": "element color here",
+          }
+        ],
+        "pageReason": "reason for the page here",
+        "pageColor": "page color here"
+      }
+    ]
   }
+  
+  Page Object: Contains all relevant information for a single page.
+  pageName: The title or identifier of the page.
+  Elements: An array of UI elements on the page.
+  elementName: The label or identifier for the UI element.
+  elementType: The form the UI element takes (e.g., button, text field).
+  elementReason: A direct quote from the user scenarios that justifies the inclusion of the element.
+  pageReason: A direct quote from the user scenarios that justifies the inclusion of the page in the website.
+  elementColor: An unique HEX color.
+  pageColor: An unique HEX color. 
 
+  here is an example for you
 
-  "\n"
-  "'scenarios' are user scenarios:\n"
-  "\n"
-  "'dimensions' is the design space:\n"
-  "\n"
-  "'combinations' is the design combination:\n"
+  user scenario:
 
+  "Mary, a 30-year-old professional woman, works five days a week and is usually busy on weekdays. But on weekends, she likes to relax at home and take care of some of her daily tasks, 
+  such as shopping. This Saturday morning, she decides to update her closet, so she opens the website of an online fashion store she frequently visits. She easily logs into her account, 
+  with her personal information and payment methods already saved, eliminating the need for tedious steps. On the store's homepage, Mary sees the latest promotions and recommended items, 
+  and then decides to browse through the new arrivals of shirts and dresses. Using the site's search function, she entered the styles and colors she was interested in and used filters to 
+  narrow down the results. After browsing through a few options, she fell in love with a floral print shirt and went through the item page to check out the details, including size, material, 
+  price and delivery options. After confirming that there are no problems, Mary adds the item to her cart and continues to browse other items until she is satisfied. She reviews the shopping 
+  cart, confirms the item and quantity, and selects checkout and enters the delivery address. After confirming the order information, Mary selects the payment method and completes the payment. 
+  She soon receives an order confirmation email telling her that the order has been successfully completed and is expected to be delivered within 3-5 business days. Mary is satisfied and closes 
+  her browser. She looks forward to receiving her new dress and is ready to enjoy a relaxing weekend."
 
-  "This is the 'methods' that guide you how to update the content in 'combinations': \n"
+  output:
 
-  "The first element of the 2D list corresponds to the first element of the 1D list \"Page\", and so on. 
-  You need to add list elements to the 2D list to correspond to the number of elements in \"Page\". \n"
-  "Combine the requirements analysis of the user scenario and the exploration of the design space 
-  by filling in Reason with which short scene from the user scenario you analysed the results from. Update as follows:\n"
-
-  "Update as follows: \n"
-
-  "1. \"Page\" Add the name of the page theme (e.g. landing page, etc.) from 'dimensions'. \n"
-  "2. \"EleName\" Add the name of the UI element on the corresponding page from 'dimensions', corresponding to the list above (e.g. [login,email],). \n"
-  "3. \"EleForm\" Add the form of the UI element on the corresponding page from 'dimensions', corresponding to the list of \"EleName\" (e.g. [button, link],). \n"
-  "4. \"EleCon\" Adds the content of the UI element on the corresponding page from 'dimensions', corresponding to the list above (e.g. menu or table). \n"
-  "5. \"Reason\" Attach which short scene from the user scenario you analysed and add the reason for the design, corresponding to the list above. \n"
-
-
-  "\n"
-
-
-  ##########
-  "You must return JSON of updated 'combinations'. \n"
-  "You must show the entire JSON.\n"
-  "You must use double quotes (\") for correct JSON format.\n"
-  "You must not change the names of the default memory fields. Only update the value.\n"
-
-  "\n"
-
+  {
+    "page": [
+      {
+        "pageName": "Login Page",
+        "elements": [
+        ],
+        "pageReason": "She easily logs into her account",
+        "pageColor": "#8A2BE2"
+      },
+      {
+        "pageName": "Homepage",
+        "elements": [
+          {
+            "elementName": "Search Bar",
+            "elementType": "Text Box",
+            "elementReason": "Using the site's search function",
+            "elementColor": "#9ACD32"
+          },
+          {
+            "elementName": "Promotions Section",
+            "elementType": "Image Gallery",
+            "elementReason": "Mary sees the latest promotions",
+            "elementColor": "#40E0D0"
+          },
+          {
+            "elementName": "Recommendations Section",
+            "elementType": "Dynamic List",
+            "elementReason": "and recommended items",
+            "elementColor": "#6495ED"
+          }
+        ],
+        "pageReason": "On the store's homepage, Mary sees the latest promotions and recommended items",
+        "pageColor": "#FF6347"
+      },
+      {
+        "pageName": "Product List",
+        "elements": [
+          {
+            "elementName": "Filter Options",
+            "elementType": "Dropdown Menu",
+            "elementReason": "used filters to narrow down the results",
+            "elementColor": "#DC143C"
+          },
+          {
+            "elementName": "Product Gallery",
+            "elementType": "Image Gallery",
+            "elementReason": "she fell in love with a floral print shirt and went through the item page",
+            "elementColor": "#00CED1"
+          }
+        ],
+        "pageReason": "decides to browse through the new arrivals of shirts and dresses",
+        "pageColor": "#FFD700"
+      },
+      {
+        "pageName": "Item Page",
+        "elements": [
+          {
+            "elementName": "Item Details",
+            "elementType": "List",
+            "elementReason": "went through the item page to check out the details, including size, material, 
+            price and delivery options",
+            "elementColor": "#FF8C00"
+          },
+          {
+            "elementName": "Add To Cart Button",
+            "elementType": "Button",
+            "elementReason": "Mary adds the item to her cart and continues to browse other items until she is satisfied.",
+            "elementColor": "#6A5ACD"
+          }
+        ],
+        "pageReason": "She reviews the shopping cart, confirms the item and quantity",
+        "pageColor": "#20B2AA"
+      },
+      {
+        "pageName": "Shopping Cart",
+        "elements": [
+          {
+            "elementName": "Item Review Section",
+            "elementType": "List",
+            "elementReason": "reviews the shopping cart",
+            "elementColor": "#FF69B4"
+          },
+          {
+            "elementName": "Checkout Button",
+            "elementType": "Button",
+            "elementReason": "selects checkout and enters the delivery address",
+            "elementColor": "#00FF7F"
+          }
+        ],
+        "pageReason": "She reviews the shopping cart, confirms the item and quantity",
+        "pageColor": "#FF4500"
+      }
+      
+    ]
+  }   
   `
 } as const;
 

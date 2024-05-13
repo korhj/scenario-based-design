@@ -4,8 +4,23 @@ import { figmaAPI } from "@/lib/figmaAPI";
 import { getTextForSelection } from "@/lib/getTextForSelection";
 import { getTextOffset } from "@/lib/getTextOffset";
 import { CompletionRequestBody } from "@/lib/types";
+import { colorText } from "@/lib/colorText";
 import { useState } from "react";
 import { z } from "zod";
+
+type PageElement = {
+  elementName: string;
+  elementType: string;
+  elementReason: string;
+  elementColor: string;
+};
+
+type Page = {
+  pageName: string;
+  elements: PageElement[];
+  pageReason: string;
+  pageColor: string;
+};
 
 // This function calls our API and lets you read each character as it comes in.
 // To change the prompt of our AI, go to `app/api/completion.ts`.
@@ -28,14 +43,7 @@ async function streamAIResponse(body: z.infer<typeof CompletionRequestBody>) {
 }
 
 export default function Plugin() {
-  const [completion, setCompletion] = useState<
-  { Page: string;
-    EleName: string[];
-    EleForm: string[];
-    EleCon: string[];
-    Reason: string[];}[]
-    >([]);
-
+  const [completion, setCompletion] = useState<Page[]>([]);
   // This function calls our API and handles the streaming response.
   // This ends up building the text up and using React state to update the UI.
   const onStreamToIFrame = async () => {
@@ -63,20 +71,15 @@ export default function Plugin() {
       }
       text += value;
     }
-    console.log("text", text);
-    const dataJSON = JSON.parse(text);
-    console.log("text parsed", dataJSON);
-    
-    const transformedData = dataJSON.Page.map((page: any, index: string | number) => ({
-      Page: page,
-      EleName: dataJSON.EleName[index],
-      EleForm: dataJSON.EleForm[index],
-      EleCon: dataJSON.EleCon[index],
-      Reason: dataJSON.Reason[index]
-    }));
-    console.log("transformed", transformedData)
-    setCompletion(transformedData);
-    console.log(completion)
+
+    try {
+      const dataJSON = JSON.parse(text);
+      colorText(dataJSON.page);
+      setCompletion(dataJSON.page);
+    } catch (e) {
+      console.error("Failed to parse JSON:", e);
+    }
+
   };
 
   const onAddToCanvas = async (elementText: string, pageName: string) => {
@@ -160,28 +163,29 @@ export default function Plugin() {
           Extract UI elements
         </button>
       </div>
-        {completion.map((item, index) => (
-          <><button
-            key={index}
-            onClick={() => onAddPageToCanvas(item.Page)}
-            className="mb-5 p-2 px-4 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            Page: {item.Page}<br></br>
+        {completion.map((page, pageIndex) => (
+          <div key={pageIndex}>
+            <button
+              onClick={() => onAddPageToCanvas(page.pageName)}
+              style={{ backgroundColor: page.pageColor }}
+              className="mb-5 p-2 px-4 rounded  text-white hover:opacity-75"
+            >
+              Page name: {page.pageName}<br></br>
+            </button>
 
-          </button><div className="mt-2">
-              {item.EleName.map((eleName, eleIndex) => (
+            {page.elements.map((element, elementIndex) => (
+              <div key={elementIndex} >
                 <button
-                  key={eleIndex}
-                  onClick={() => onAddToCanvas(eleName, item.Page)}
-                  className="mr-2 mb-2 p-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-600"
+                  onClick={() => onAddToCanvas(element.elementName, page.pageName)}
+                  style={{ backgroundColor: element.elementColor }}
+                  className="mb-5 p-2 px-4 rounded text-white hover:opacity-75"
                 >
-                  UI element: {eleName}<br></br>
-                  Form: {item.EleForm[eleIndex]}<br></br>
-                  Content: {item.EleCon[eleIndex]}
+                  UI Element: {element.elementName} ({element.elementType})
                 </button>
-              ))}
-            </div></>
-
+                
+              </div>
+            ))}
+          </div>
         ))}
     </div>
   );
